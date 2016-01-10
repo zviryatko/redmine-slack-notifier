@@ -24,7 +24,9 @@
             "email": "zviryatko@html-and-cms.com"
         }
     ],
-    "post-create-project-cmd": [
-        "php -r \"copy('config/config.yml.dist', 'config/config.yml');\""
-    ]
+    "scripts": {
+        "post-create-project-cmd": [
+            "php -r \"copy('config/config.yml.dist', 'config/config.yml');\""
+        ]
+    }
 }
