@@ -3,6 +3,7 @@
     "description": "Send live notification to Slack chat based on redmine working hours.",
     "type": "project",
     "version": "0.1.0",
+    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "zviryatko\\RedmineSlackNotifier\\": "src/"
