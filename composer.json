@@ -1,0 +1,17 @@
+{
+    "name": "zviryatko/redmine-slack-notifier",
+    "description": "Send live notification to Slack chat based on redmine working hours.",
+    "type": "project",
+    "require": {
+        "kbsali/redmine-api": "^1.5",
+        "guzzlehttp/guzzle": "^6.1",
+        "zendframework/zend-log": "^2.6"
+    },
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Alex Davyskiba",
+            "email": "zviryatko@html-and-cms.com"
+        }
+    ]
+}
