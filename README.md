@@ -25,7 +25,7 @@ PHP 5.4 or above
 Authors
 -------
 
-Alex Davyskiba - <sanya.davyskiba@gmail.com> - <https://twitter.com/zviryatk0> - <http://makeyoulivebetter.org.ua/><br />
+Alex Davyskiba - <sanya.davyskiba@gmail.com> - <https://twitter.com/zviryatk0> - <https://makeyoulivebetter.org.ua/><br />
 
 See also the list of [contributors](https://github.com/zviryatko/redmine-slack-notifier/contributors) who participated in this project.
 
