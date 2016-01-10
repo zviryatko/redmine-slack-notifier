@@ -1,0 +1,36 @@
+#!/usr/bin/env php
+<?php
+/**
+ * @file
+ * Main notifier script.
+ */
+
+use Zend\Log\Writer\Stream as WriterStream;
+use Zend\Log\Logger;
+use Redmine\Client as RedmineClient;
+use CL\Slack\Transport\ApiClient as SlackClient;
+use Symfony\Component\Yaml\Yaml;
+use Zend\Log\PsrLoggerAdapter as PsrLogger;
+use zviryatko\RedmineSlackNotifier\Notifier;
+
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+if (!file_exists('config/config.yml')) {
+    fwrite(STDERR, 'Config file not found in "' . getcwd() . "/config/config.yml\".\n");
+    exit(1);
+}
+$config = Yaml::parse(file_get_contents('config/config.yml'));
+
+$writer = new WriterStream($config['logfile']);
+$logger = new PsrLogger((new Logger())->addWriter($writer));
+
+$redmine_client = new RedmineClient(
+  $config['redmine']['url'],
+  $config['redmine']['apikeyOrUsername'],
+  empty($config['redmine']['pass']) ? null : $config['redmine']['pass']
+);
+
+$slack_client = new SlackClient($config['slack']['token']);
+
+$notifier = new Notifier($logger, $redmine_client, $slack_client);
+$notifier->notify($config['users']);

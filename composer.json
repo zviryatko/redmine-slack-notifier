@@ -2,10 +2,19 @@
     "name": "zviryatko/redmine-slack-notifier",
     "description": "Send live notification to Slack chat based on redmine working hours.",
     "type": "project",
+    "version": "0.1.0",
+    "autoload": {
+        "psr-4": {
+            "zviryatko\\RedmineSlackNotifier\\": "src/"
+        }
+    },
+    "bin": ["bin/redmine-slack-notifier.php"],
     "require": {
         "kbsali/redmine-api": "^1.5",
         "guzzlehttp/guzzle": "^6.1",
-        "zendframework/zend-log": "^2.6"
+        "zendframework/zend-log": "^2.6",
+        "symfony/yaml": "~2.2",
+        "cleentfaar/slack": "^0.17.1"
     },
     "license": "GPL-3.0",
     "authors": [
@@ -13,5 +22,8 @@
             "name": "Alex Davyskiba",
             "email": "zviryatko@html-and-cms.com"
         }
+    ],
+    "post-create-project-cmd": [
+        "php -r \"copy('config/config.yml.dist', 'config/config.yml');\""
     ]
 }

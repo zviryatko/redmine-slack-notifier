@@ -1,0 +1,12 @@
+logfile: "log/error.log"
+redmine:
+  url: "http://redmine.example.com/"
+  apikeyOrUsername: "username"
+  pass: "password"
+slack:
+  token: "abcd-12345678901-12345678901-12345678901-a1b2c3d4e5"
+users:
+  # Currently it support only the same user name in both systems,
+  # so this list must contain only users who have set the same name in
+  # redmine and slack apps.
+  - User Name
