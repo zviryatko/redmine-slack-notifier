@@ -7,7 +7,7 @@ Installation / Usage
 --------------------
 
 ```bash
-$ composer create-project zviryatko/redmine-slack-notifier <project-path>
+$ composer create-project zviryatko/redmine-slack-notifier <project-path> --stability dev
 ```
 
 Add script to cron in suitable time ```$ crontab -e```
