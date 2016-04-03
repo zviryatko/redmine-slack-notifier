@@ -3,6 +3,9 @@ Redmine Slack Notifier
 
 Helps you not forget about log spent time to redmine in time!
 
+[![Build Status](https://travis-ci.org/zviryatko/redmine-slack-notifier.svg?branch=master)](https://travis-ci.org/zviryatko/redmine-slack-notifier)
+[![Coverage Status](https://coveralls.io/repos/github/zviryatko/redmine-slack-notifier/badge.svg?branch=master)](https://coveralls.io/github/zviryatko/redmine-slack-notifier?branch=master)
+
 Installation / Usage
 --------------------
 
