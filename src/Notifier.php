@@ -6,31 +6,22 @@
 
 namespace zviryatko\RedmineSlackNotifier;
 
+use CL\Slack\Exception\SlackException;
+use CL\Slack\Payload\AuthTestPayload;
+use CL\Slack\Payload\AuthTestPayloadResponse;
 use CL\Slack\Payload\ChatPostMessagePayload;
-use CL\Slack\Payload\UsersListPayload;
+use CL\Slack\Payload\ChatPostMessagePayloadResponse;
 use Redmine\Client as RedmineClient;
 use CL\Slack\Transport\ApiClientInterface as SlackClient;
-use Psr\Log\LoggerInterface;
 
 /**
  * Send live notification to Slack chat based on redmine working hours.
  *
  * @package zviryatko\RedmineSlackNotifier
+ * @author Alex Davyskiba <sanya.davyskiba@gmail.com>
  */
 class Notifier implements NotifierInterface
 {
-    /**
-     * Working day hours.
-     */
-    const WORKING_DAY = 8;
-
-    /**
-     * The logger.
-     *
-     * @var \Psr\Log\LoggerInterface
-     */
-    protected $logger;
-
     /**
      * Redmine API client.
      *
@@ -45,15 +36,12 @@ class Notifier implements NotifierInterface
      */
     protected $slack_client;
 
-    protected $cache;
-
     /**
-     * @param \Psr\Log\LoggerInterface $logger
      * @param \Redmine\Client $redmine
+     * @param \CL\Slack\Transport\ApiClientInterface $slack
      */
-    public function __construct(LoggerInterface $logger, RedmineClient $redmine, SlackClient $slack)
+    public function __construct(RedmineClient $redmine, SlackClient $slack)
     {
-        $this->logger = $logger;
         $this->redmine_client = $redmine;
         $this->slack_client = $slack;
     }
@@ -61,51 +49,73 @@ class Notifier implements NotifierInterface
     /**
      * {@inheritdoc}
      */
-    public function notify(array $users)
+    public function redmineUserId()
     {
-        $time_entry_users = [];
-        $data = $this->redmine_client->time_entry->all(['spent_on' => 't']);
-        if ($data['total_count'] > 0) {
-            foreach ($data['time_entries'] as $time_entry) {
-                $name = $time_entry['user']['name'];
-                $hours = $time_entry['hours'];
-                $time_entry_users[$name] = !isset($time_entry_users[$name]) ? $hours : $time_entry_users[$name] + $hours;
-            }
+        $data = $this->redmine_client->user->getCurrentUser();
+        if (!isset($data['user']) && !isset($data['user']['id'])) {
+            throw new NotifierException("Can't access to redmine api, check credentials or external url.");
         }
-        $users = array_filter($users, function ($user) use ($time_entry_users) {
-            if (!isset($time_entry_users[$user])) {
-                return true;
-            }
-            return $time_entry_users[$user] < Notifier::WORKING_DAY;
-        });
-        $payload = new UsersListPayload();
-        $response = $this->slack_client->send($payload);
-        $slack_users = [];
-        if ($response->isOk() && method_exists($response, 'getUsers')) {
-            foreach ($response->getUsers() as $user) {
-                /** @var \CL\Slack\Model\User $user */
-                /** @var \CL\Slack\Model\UserProfile $profile */
-                $profile = $user->getProfile();
-                $slack_users[$profile->getRealName()] = $user->getName();
-            }
-        } else {
-            $this->logger->error($response->getError());
-            $this->logger->error($response->getErrorExplanation());
+
+        return $data['user']['id'];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function totalWorkedHours($user_id)
+    {
+        $total = 0;
+        $data = $this->redmine_client->time_entry->all(['spent_on' => 't', 'user_id' => $user_id]);
+        if ($data === false) {
+            throw new NotifierException('Redmine api returns nothing, possibly something went wrong.');
         }
-        $users = array_filter($users, function ($user) use ($slack_users) {
-            return isset($slack_users[$user]);
-        });
-        $self = $this;
-        array_map(function ($user) use ($self, $slack_users) {
-            $payload = new ChatPostMessagePayload();
-            $payload->setChannel("@{$slack_users[$user]}");
-            $payload->setUsername('Redminder');
-            $payload->setText(':redminder:Redmine - log in time.');
+        foreach ($data['time_entries'] as $time_entry) {
+            $total += $time_entry['hours'];
+        }
+        return $total;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function slackUsername()
+    {
+        try {
+            $payload = new AuthTestPayload();
+            /** @var AuthTestPayloadResponse $response */
             $response = $this->slack_client->send($payload);
             if (!$response->isOk()) {
-                $this->logger->error($response->getError());
-                $this->logger->error($response->getErrorExplanation());
+                throw new NotifierException(
+                    sprintf('Slack api error: %s (%s).', $response->getError(), $response->getErrorExplanation())
+                );
             }
-        }, $users);
+            return $response->getUsername();
+        } catch (SlackException $exception) {
+            throw new NotifierException("Can't access to slack api, check credentials.", null, $exception);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function notifySlackUser($from, $to, $message)
+    {
+        try {
+            $payload = new ChatPostMessagePayload();
+            $payload->setChannel("@{$to}");
+            $payload->setUsername($from);
+            $payload->setText($message);
+            /** @var ChatPostMessagePayloadResponse $response */
+            $response = $this->slack_client->send($payload);
+            if (!$response->isOk()) {
+                throw new NotifierException(
+                    sprintf("Can't send message to slack user: %s (%s)", $response->getError(),
+                        $response->getErrorExplanation())
+                );
+            }
+            return true;
+        } catch (SlackException $exception) {
+            throw new NotifierException("Can't access to slack api, check credentials.", null, $exception);
+        }
     }
 }

@@ -2,7 +2,10 @@
 <?php
 /**
  * @file
- * Main notifier script.
+ * Notif
+ *
+ * @package zviryatko\RedmineSlackNotifier
+ * @author Alex Davyskiba <sanya.davyskiba@gmail.com>
  */
 
 use Zend\Log\Writer\Stream as WriterStream;
@@ -11,6 +14,7 @@ use Redmine\Client as RedmineClient;
 use CL\Slack\Transport\ApiClient as SlackClient;
 use Symfony\Component\Yaml\Yaml;
 use Zend\Log\PsrLoggerAdapter as PsrLogger;
+use zviryatko\RedmineSlackNotifier\NotifierException;
 use zviryatko\RedmineSlackNotifier\Notifier;
 
 chdir(dirname(__DIR__));
@@ -26,12 +30,21 @@ $writer = new WriterStream($config['logfile']);
 $logger = new PsrLogger((new Logger())->addWriter($writer));
 
 $redmine_client = new RedmineClient(
-  $config['redmine']['url'],
-  $config['redmine']['apikeyOrUsername'],
-  empty($config['redmine']['pass']) ? null : $config['redmine']['pass']
+    $config['redmine']['url'],
+    $config['redmine']['apikeyOrUsername'],
+    empty($config['redmine']['pass']) ? null : $config['redmine']['pass']
 );
-
 $slack_client = new SlackClient($config['slack']['token']);
-
-$notifier = new Notifier($logger, $redmine_client, $slack_client);
-$notifier->notify($config['users']);
+$hours = $config['workday_hours'] ?: 8;
+try {
+    $notifier = new Notifier($redmine_client, $slack_client);
+    if ($notifier->totalWorkedHours($notifier->redmineUserId()) < $hours) {
+        $notifier->notifySlackUser(
+            $config['from'],
+            $notifier->slackUsername(),
+            $config['message']
+        );
+    }
+} catch (NotifierException $exception) {
+    $logger->error($exception->getMessage());
+}

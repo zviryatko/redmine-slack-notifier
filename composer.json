@@ -9,6 +9,11 @@
             "zviryatko\\RedmineSlackNotifier\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "zviryatko\\RedmineSlackNotifier\\Tests\\": "tests/"
+        }
+    },
     "bin": ["bin/redmine-slack-notifier.php"],
     "require": {
         "kbsali/redmine-api": "^1.5",
@@ -16,6 +21,10 @@
         "zendframework/zend-log": "^2.6",
         "symfony/yaml": "~2.2",
         "cleentfaar/slack": "^0.17.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5.3",
+        "satooshi/php-coveralls": "^1.0"
     },
     "license": "GPL-3.0",
     "authors": [
