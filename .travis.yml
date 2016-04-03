@@ -7,7 +7,7 @@ php:
 before_script:
   - composer self-update
   - composer install --dev --no-interaction
-  - composer global require phpunit/phpunit
+  - wget https://phar.phpunit.de/phpunit.phar
 
 script:
-  - phpunit
+  - php phpunit.phar
